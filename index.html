@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>💕 我们的课程表</title>
+<style>
+  :root{
+    --blue:#5b8def; --blue-bg:#e9f1fe;
+    --pink:#f06d9a; --pink-bg:#fdeaf1;
+    --ink:#3a3a3a; --sub:#999; --line:#f3e2e9;
+    --bg:#fdf7f9;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:920px;margin:0 auto;padding:18px 16px 48px}
+
+  header.hero{background:linear-gradient(135deg,#ffb1c8 0%,#9ec3f5 100%);border-radius:20px;padding:24px;color:#fff;box-shadow:0 8px 24px rgba(240,109,154,.20)}
+  .hero-title{font-size:18px;font-weight:700;opacity:.95}
+  .hero-date{font-size:28px;font-weight:800;margin-top:8px;letter-spacing:1px}
+  .hero-sub{margin-top:6px;font-size:13px;opacity:.95}
+
+  .view-tabs{display:flex;gap:10px;margin:18px 0 14px}
+  .view-tabs button,.person-tabs button{padding:8px 22px;border-radius:999px;border:1px solid #f3cdd9;background:#fff;color:#c0688c;cursor:pointer;font-size:14px;transition:all .2s}
+  .view-tabs button.active,.person-tabs button.active{background:linear-gradient(135deg,#f78fb3,#8fb6f7);color:#fff;border-color:transparent;box-shadow:0 4px 12px rgba(240,109,154,.3)}
+
+  .sec-title{font-size:15px;color:#b0567a;margin:2px 0 10px;font-weight:600}
+
+  .today-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:640px){.today-grid{grid-template-columns:1fr}}
+  .person-card{background:#fff;border-radius:16px;padding:14px 16px;box-shadow:0 4px 16px rgba(240,109,154,.08)}
+  .person-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .dot{width:10px;height:10px;border-radius:50%}
+  .pname{font-weight:700;font-size:15px}
+  .count{margin-left:auto;font-size:12px;color:var(--sub)}
+  .item{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-bottom:1px dashed var(--line)}
+  .item:last-child{border-bottom:none}
+  .time-col{min-width:78px;display:flex;flex-direction:column;gap:4px;align-items:center}
+  .sec-badge{padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 1px 4px rgba(150,120,140,.14)}
+  .badge-blue{background:linear-gradient(135deg,#e9f2ff,#f6faff);color:#3d6fd0}
+  .badge-pink{background:linear-gradient(135deg,#ffeaf3,#fff7fb);color:#d94f83}
+  .time{font-size:11px;color:var(--sub)}
+  .info{flex:1;min-width:0}
+  .cname{font-weight:600;font-size:14px;line-height:1.4}
+  .meta{font-size:12px;color:var(--sub);margin-top:3px}
+  .status{font-size:11px;padding:2px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+  .status.now{background:#e3f7e8;color:#2eaf5e}
+  .status.done{background:#f0f0f0;color:#b0b0b0}
+  .status.next{background:#fff1dd;color:#e8912d}
+  .empty{padding:20px 0;text-align:center;color:#c0a5b0;font-size:13px}
+
+  .person-tabs{display:flex;gap:10px;margin:4px 0 12px}
+  .person-tabs button{padding:6px 18px;font-size:13px}
+
+  .table-wrap{overflow-x:auto;background:#fff;border-radius:18px;box-shadow:0 10px 28px rgba(240,109,154,.12);border:1px solid #ffe3ee}
+  table{border-collapse:separate;border-spacing:0;width:100%;min-width:760px}
+  th,td{border-bottom:1px solid #fdeef4;border-right:1px solid #fdeef4;padding:7px 5px;text-align:center;font-size:12px;vertical-align:middle}
+  th:last-child,td:last-child{border-right:none}
+  tbody tr:last-child td{border-bottom:none}
+  thead th{background:linear-gradient(180deg,#fff1f7,#ffe9f3);color:#c25a82;font-weight:700;padding:11px 4px;font-size:13px}
+  thead th small{font-weight:400;font-size:10px;color:#e88cab}
+  thead th.weekend{background:linear-gradient(180deg,#fff6f0,#ffedf4);color:#d98a6a}
+  thead th:first-child,thead td:first-child{border-top-left-radius:16px}
+  thead th:last-child{border-top-right-radius:16px}
+  td.slot{background:linear-gradient(180deg,#fffbfd,#fdf4f7);color:#bd93a5;font-weight:700;width:66px;font-size:12px;border-right:1px dashed #f6dbe5}
+  td.slot small{display:block;font-size:10px;font-weight:400;color:#d3aec0;margin-top:2px}
+  tbody tr:nth-child(even) td:not(.today-col){background-color:#fffdfe}
+  tbody tr:hover td:not(.slot):not(.today-col){background-color:#fff5f9}
+  td.today-col{background:linear-gradient(180deg,#fff3f8,#fffafc)}
+  thead th.today-col{background:linear-gradient(180deg,#ffe4ef,#ffd9e8);color:#e05585;box-shadow:inset 0 -3px 0 #f78fb3}
+  .chip{position:relative;border-radius:12px;padding:8px 7px;line-height:1.45;border-left:3px solid transparent;box-shadow:0 2px 6px rgba(150,120,140,.10);transition:transform .18s ease,box-shadow .18s ease}
+  .chip:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 6px 14px rgba(150,120,140,.20)}
+  .chip .cn{font-weight:700;font-size:12px}
+  .chip .cr{font-size:11px;opacity:.72;margin-top:3px}
+  .chip-blue{background:linear-gradient(140deg,#e9f2ff 0%,#f6faff 100%);color:#3d6fd0;border-left-color:#7aa5f2}
+  .chip-pink{background:linear-gradient(140deg,#ffeaf3 0%,#fff7fb 100%);color:#d94f83;border-left-color:#f78fb3}
+
+  footer{margin-top:26px;text-align:center;font-size:12px;color:#cfa8b8}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="hero-title">💕 我们的课程表</div>
+    <div class="hero-date" id="heroDate"></div>
+    <div class="hero-sub" id="heroSub"></div>
+  </header>
+
+  <div class="view-tabs">
+    <button id="tabToday" class="active">今天</button>
+    <button id="tabWeek">一周课表</button>
+  </div>
+
+  <section id="viewToday">
+    <h2 class="sec-title" id="todayTitle"></h2>
+    <div class="today-grid" id="todayGrid"></div>
+  </section>
+
+  <section id="viewWeek" hidden>
+    <div class="person-tabs" id="personTabs"></div>
+    <div class="table-wrap"><table id="weekTable"></table></div>
+  </section>
+
+  <footer>想我的时候，就来找我呀</footer>
+</div>
+
+<script>
+/* ═══════════════════ 课表数据（修改这里即可）═══════════════════
+ * 每节课的上下课时间（可按学校作息修改）
+ */
+const SECTIONS = {
+  1:["08:30","09:15"],
+  2:["09:25","10:10"],
+  3:["10:20","11:05"],
+  4:["11:15","12:00"],
+  5:["14:00","14:45"],
+  6:["14:55","15:40"],
+  7:["15:50","16:35"],
+  8:["16:45","17:30"],
+  9:["18:30","19:15"],
+  10:["19:25","20:10"]
+};
+
+/* 每门课一条记录：{ day, start, end, name, room, teacher }
+ *   day   : 1=周一 2=周二 3=周三 4=周四 5=周五 6=周六 7=周日
+ *   start : 开始节次   end: 结束节次
+ *   name  : 课程名称   room: 教室   teacher: 老师姓名
+ */
+const PEOPLE = [
+  {
+    name: "我",
+    courses: [
+      { day:1, start:3, end:4, name:"大学英语（1）", room:"博文楼306", teacher:"王文" },
+      { day:1, start:7, end:8, name:"Linux系统及应用", room:"博文楼机房601", teacher:"何守新" },
+      { day:2, start:3, end:4, name:"数据库原理及应用", room:"博文楼机房601", teacher:"陈丹" },
+      { day:2, start:7, end:8, name:"Java高级编程", room:"博文楼机房618", teacher:"王丹" },
+      { day:3, start:1, end:2, name:"习近平新时代中国特色社会主义思想概论", room:"博文楼机房618", teacher:"王艳" },
+      { day:3, start:3, end:4, name:"大学英语（1）", room:"博文楼306", teacher:"王文" },
+      { day:4, start:5, end:6, name:"习近平新时代中国特色社会主义思想概论", room:"博文楼302", teacher:"郭秋蓝" },
+      { day:4, start:1, end:2, name:"面向对象编程基础", room:"博文楼机房618", teacher:"王艳" },
+      { day:4, start:7, end:8, name:"Java高级编程（实验）", room:"计算机系机房601", teacher:"王丹" },
+      { day:5, start:7, end:8, name:"Java高级编程", room:"博文楼机房618", teacher:"王丹" },
+      { day:7, start:5, end:6, name:"前端编程基础", room:"计算机系机房618", teacher:"王艳" },
+      { day:7, start:7, end:8, name:"Linux系统及应用（实验）", room:"计算机系机房601", teacher:"何守新" }
+    ]
+  },
+  {
+    name: "老婆大人",
+    courses: [
+      { day:1, start:5, end:6, name:"Java程序设计基础", room:"4502", teacher:"李彤业" },
+      { day:1, start:7, end:8, name:"软件测试", room:"4301", teacher:"张毅" },
+      { day:2, start:1, end:2, name:"大学英语读写译I", room:"4102", teacher:"牛晒" },
+      { day:2, start:5, end:6, name:"软件测试", room:"4202", teacher:"张毅" },
+      { day:3, start:1, end:2, name:"大学英语读写译I", room:"4102", teacher:"牛晒" },
+      { day:3, start:3, end:4, name:"Java程序设计基础", room:"4502", teacher:"李彤业" },
+      { day:4, start:5, end:6, name:"Java程序设计基础", room:"4502", teacher:"李彤业" },
+      { day:4, start:7, end:8, name:"中国近现代史纲要", room:"2302", teacher:"袁凤桐" },
+      { day:5, start:1, end:2, name:"大学英语读写译I", room:"4102", teacher:"牛晒" },
+      { day:5, start:3, end:4, name:"Java程序设计基础", room:"4502", teacher:"李彤业" }
+    ]
+  }
+];
+/* ═══════════════════ 以下为页面逻辑，无需修改 ═══════════════════ */
+
+const DAY_NAMES = ["周一","周二","周三","周四","周五","周六","周日"];
+let activePerson = 0;
+
+const pad = n => (n < 10 ? "0" + n : "" + n);
+const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+const todayDay = () => { const d = new Date(); return d.getDay() === 0 ? 7 : d.getDay(); };
+const secRange = c => SECTIONS[c.start][0] + " - " + SECTIONS[c.end][1];
+
+function courseStatus(c){
+  const m = nowMin();
+  const [sh, sm] = SECTIONS[c.start][0].split(":").map(Number);
+  const [eh, em] = SECTIONS[c.end][1].split(":").map(Number);
+  if (m < sh * 60 + sm) return "todo";
+  if (m > eh * 60 + em) return "done";
+  return "now";
+}
+
+function theme(i){
+  return i === 0
+    ? { c: "var(--blue)", bg: "var(--blue-bg)" }
+    : { c: "var(--pink)", bg: "var(--pink-bg)" };
+}
+
+function renderHero(){
+  const d = new Date(), day = todayDay();
+  const c0 = PEOPLE[0].courses.filter(c => c.day === day).length;
+  const c1 = PEOPLE[1].courses.filter(c => c.day === day).length;
+  document.getElementById("heroDate").textContent =
+    `${d.getMonth() + 1}月${d.getDate()}日 · 星期${DAY_NAMES[day - 1][1]}`;
+  document.getElementById("heroSub").textContent =
+    (c0 === 0 && c1 === 0)
+      ? "今天我们都没有课，我们见一面吧 💕"
+      : `今天 ${PEOPLE[0].name} 有 ${c0} 节课 · ${PEOPLE[1].name} 有 ${c1} 节课`;
+  document.getElementById("todayTitle").textContent =
+    `今天 · ${d.getMonth() + 1}月${d.getDate()}日 星期${DAY_NAMES[day - 1][1]}`;
+}
+
+function renderToday(){
+  const day = todayDay();
+  const grid = document.getElementById("todayGrid");
+  grid.innerHTML = "";
+  PEOPLE.forEach((p, i) => {
+    const list = p.courses.filter(c => c.day === day).sort((a, b) => a.start - b.start);
+    const t = theme(i);
+    let nextMarked = false;
+    const items = list.map(c => {
+      const st = courseStatus(c);
+      let cls = "", label = "";
+      if (st === "now")      { cls = "now";  label = "上课中"; }
+      else if (st === "done"){ cls = "done"; label = "已结束"; }
+      else if (!nextMarked)  { nextMarked = true; cls = "next"; label = "下一节"; }
+      const sec = c.start === c.end ? `第${c.start}节` : `第${c.start}-${c.end}节`;
+      return `<div class="item">
+        <div class="time-col">
+          <span class="sec-badge badge-${i === 0 ? "blue" : "pink"}">${sec}</span>
+          <span class="time">${secRange(c)}</span>
+        </div>
+        <div class="info">
+          <div class="cname">${c.name}</div>
+          <div class="meta">${c.room}${c.teacher ? " · " + c.teacher : ""}</div>
+        </div>
+        ${cls ? `<span class="status ${cls}">${label}</span>` : ""}
+      </div>`;
+    }).join("");
+    grid.innerHTML += `
+      <div class="person-card">
+        <div class="person-head">
+          <span class="dot" style="background:${t.c}"></span>
+          <span class="pname" style="color:${t.c}">${p.name}</span>
+          <span class="count">${list.length ? list.length + " 节课" : "休息"}</span>
+        </div>
+        <div class="items">${items || '<div class="empty">今天没有课 🎉</div>'}</div>
+      </div>`;
+  });
+}
+
+function renderPersonTabs(){
+  const el = document.getElementById("personTabs");
+  el.innerHTML = PEOPLE.map((p, i) =>
+    `<button class="${i === activePerson ? "active" : ""}" data-i="${i}">${p.name}的课表</button>`
+  ).join("");
+  el.querySelectorAll("button").forEach(b => b.onclick = () => {
+    activePerson = +b.dataset.i;
+    renderPersonTabs(); renderWeek();
+  });
+}
+
+function renderWeek(){
+  const p = PEOPLE[activePerson], day = todayDay();
+  const chipCls = activePerson === 0 ? "chip-blue" : "chip-pink";
+  const maxSec = Math.max(8, ...p.courses.map(c => c.end));
+  const spanned = new Set();
+  p.courses.forEach(c => { for (let s = c.start + 1; s <= c.end; s++) spanned.add(c.day + "-" + s); });
+  let html = `<thead><tr><td class="slot">节次</td>${
+    DAY_NAMES.map((d, i) =>
+      `<th class="${i + 1 === day ? "today-col " : ""}${i + 1 >= 6 ? "weekend" : ""}">${d}${i + 1 === day ? "<br><small>·今天·</small>" : ""}</th>`
+    ).join("")}</tr></thead><tbody>`;
+  for (let s = 1; s <= maxSec; s++){
+    html += `<tr><td class="slot">第${s}节<br><small>${SECTIONS[s][0]}</small></td>`;
+    for (let d = 1; d <= 7; d++){
+      if (spanned.has(d + "-" + s)) continue;
+      const c = p.courses.find(c => c.day === d && c.start <= s && c.end >= s);
+      const cls = d === day ? ' class="today-col"' : "";
+      html += c
+        ? `<td${cls} rowspan="${c.end - c.start + 1}"><div class="chip ${chipCls}"><div class="cn">${c.name}</div><div class="cr">${c.room}</div></div></td>`
+        : `<td${cls}></td>`;
+    }
+    html += "</tr>";
+  }
+  document.getElementById("weekTable").innerHTML = html + "</tbody>";
+}
+
+function showView(v){
+  document.getElementById("viewToday").hidden = v !== "today";
+  document.getElementById("viewWeek").hidden  = v !== "week";
+  document.getElementById("tabToday").classList.toggle("active", v === "today");
+  document.getElementById("tabWeek").classList.toggle("active", v === "week");
+  if (v === "week") renderWeek();
+}
+
+document.getElementById("tabToday").onclick = () => showView("today");
+document.getElementById("tabWeek").onclick  = () => showView("week");
+
+renderHero();
+renderToday();
+renderPersonTabs();
+setInterval(() => { renderHero(); renderToday(); }, 60000);
+</script>
+</body>
+</html>
